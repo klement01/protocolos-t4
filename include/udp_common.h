@@ -6,9 +6,11 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#define M_PI 3.14159265359
+
 #define BUFF_SIZE 255
-#define SEQ_HIST_LEN 50
-#define QUEUE_LEN 10
+#define SEQ_HIST_LEN 200
+#define QUEUE_LEN 25
 
 /* Shows error and kills program */
 void Die(char* mess);
@@ -16,6 +18,7 @@ void Die(char* mess);
 /* Types for messages and fields */
 typedef uint64_t Seq;
 typedef int8_t Value;
+typedef uint64_t TimeStamp; //TODO: check timestamp type
 
 typedef enum {
     OPEN_VALVE,
@@ -32,6 +35,12 @@ typedef struct {
     Seq seq;
     Value value;
 } Message;
+
+typedef struct {
+    Message message;
+    TimeStamp lastTry;
+    int active;
+} OutboundMessage;
 
 /* Conversion between fields and strings */
 Seq strToSeq(char* str);

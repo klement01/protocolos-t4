@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "udp_client.h"
+#include <udp_client.h>
 
 void *controller(void *ptr);
 void *supervisory(void *ptr);
 
 int main(int argc, char* argv[]) {
+    ClientData clientData = {0};
     pthread_t threadController, threadSupervisory, threadClient;
     int threadRet;
 
@@ -18,7 +19,6 @@ int main(int argc, char* argv[]) {
     }
 
     //Gather client data.
-    ClientData clientData;
     clientData.ip = argv[1];
     clientData.port = argv[2];
 

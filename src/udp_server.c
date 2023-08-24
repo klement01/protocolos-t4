@@ -4,13 +4,16 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#include "udp_server.h"
+#include <udp_server.h>
 
 char incomingBuffer[BUFF_SIZE];
 char outgoingBuffer[BUFF_SIZE];
 
 CML seqHistory = {0};
 SCMQ* incomingQueue = {0};
+
+pthread_mutex_t* levelLock;
+Level* level;
 
 void addMessageToQueue(MessageType mt, Seq seq, Value value) {
     //Checks if sequence value has already been received.
@@ -82,11 +85,12 @@ char* parseCloseValve(char* message) {
 char* answerGetLevel() {
     //GetLevel!
     //Level#⟨value⟩!
+    pthread_mutex_lock(levelLock);
+    Level levelRead = *level;
+    pthread_mutex_unlock(levelLock);
 
-    //TODO: get level
-    Value level = 50;
-
-    snprintf(outgoingBuffer, BUFF_SIZE, "Level#%s!", valueToStr(level));
+    Value levelValue = 100*levelRead;
+    snprintf(outgoingBuffer, BUFF_SIZE, "Level#%s!", valueToStr(levelValue));
 
     return outgoingBuffer;
 }
@@ -106,7 +110,7 @@ char* parseSetMax(char* message) {
 
     if (value < 0 || value > 100) return NULL;
 
-    addMessageToQueue(CLOSE_VALVE, 0, value);
+    addMessageToQueue(SET_MAX, 0, value);
     snprintf(outgoingBuffer, BUFF_SIZE, "Max#%s!", valueToStr(value));
 
     return outgoingBuffer;
@@ -170,6 +174,8 @@ void* udp_server(void* sdptr) {
     /* Initialize data structures */
     incomingQueue = serverData->incomingQueue;
     CMLinit(&seqHistory);
+    levelLock = &(serverData->levelLock);
+    level = &(serverData->level);
 
     /* Server started. */
     puts("UDP server started");

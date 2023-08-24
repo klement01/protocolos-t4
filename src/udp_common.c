@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "udp_common.h"
+#include <udp_common.h>
 
 char buffer[BUFF_SIZE];
 
@@ -49,6 +49,7 @@ void SCMQqueue(SCMQ* queue, Message* mes) {
 
     (queue->writeHead)++;
     if (queue->writeHead >= QUEUE_LEN) queue->writeHead -= QUEUE_LEN;
+    if (queue->writeHead == queue->readHead) Die("Incoming queue full");
 
     pthread_mutex_unlock(&(queue->lock));
 }

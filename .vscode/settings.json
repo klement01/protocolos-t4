@@ -10,6 +10,7 @@
         "in.h": "c",
         "unistd.h": "c",
         "udp_common.h": "c",
-        "udp_client.h": "c"
+        "udp_client.h": "c",
+        "timer.h": "c"
     }
 }

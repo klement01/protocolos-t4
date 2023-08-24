@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include "udp_common.h"
-#include "udp_client.h"
+#include <udp_common.h>
+#include <udp_client.h>
 
 void *udp_client(void *cdptr) {
     int sock;

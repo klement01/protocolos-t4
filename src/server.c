@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "udp_server.h"
+#include <udp_server.h>
+#include <simulation.h>
 
 void *simulation(void *ptr);
 void *supervisory(void *ptr);
 
 int main(int argc, char* argv[]) {
+    ServerData serverData = {0};
     pthread_t threadSimulation, threadSupervisory, threadServer;
     int threadRet;
 
@@ -18,11 +20,15 @@ int main(int argc, char* argv[]) {
     }
 
     //Gather server data.
+    serverData.port = argv[1];
+
     SCMQ incomingQueue;
     SCMQinit(&incomingQueue);
-    ServerData serverData;
-    serverData.port = argv[1];
     serverData.incomingQueue = &incomingQueue;
+
+    serverData.started = 0;
+    pthread_mutex_init(&(serverData.levelLock), NULL);
+    pthread_mutex_init(&(serverData.angleLock), NULL);
 
     //Create all threads.
     if(threadRet = pthread_create(&threadSimulation, NULL, simulation, &serverData))
@@ -47,11 +53,6 @@ int main(int argc, char* argv[]) {
     pthread_join(threadServer, NULL);
 
     exit(EXIT_SUCCESS);
-}
-
-//TODO
-void *simulation(void *ptr) {
-    //puts("Simulation started");
 }
 
 //TODO
