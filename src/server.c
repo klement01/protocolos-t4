@@ -4,12 +4,14 @@
 
 #include <udp_server.h>
 #include <simulation.h>
+#include <supervisory.h>
 
 void *simulation(void *ptr);
 void *supervisory(void *ptr);
 
 int main(int argc, char* argv[]) {
     ServerData serverData = {0};
+    SupervisoryData supervisoryData = {0};
     pthread_t threadSimulation, threadSupervisory, threadServer;
     int threadRet;
 
@@ -30,13 +32,21 @@ int main(int argc, char* argv[]) {
     pthread_mutex_init(&(serverData.levelLock), NULL);
     pthread_mutex_init(&(serverData.angleLock), NULL);
 
+    //Gather supervisory data.
+    supervisoryData.started = &(serverData.started);
+    supervisoryData.levelLock = &(serverData.levelLock);
+    supervisoryData.level = &(serverData.level);
+    supervisoryData.angleLock = &(serverData.angleLock);
+    supervisoryData.angleIn = &(serverData.angleIn);
+    supervisoryData.angleOut = &(serverData.angleOut);
+
     //Create all threads.
     if(threadRet = pthread_create(&threadSimulation, NULL, simulation, &serverData))
     {
         fprintf(stderr, "Error: simulation thread return code: %d\n", threadRet);
         exit(EXIT_FAILURE);
     }
-    if(threadRet = pthread_create(&threadSupervisory, NULL, supervisory, &serverData))
+    if(threadRet = pthread_create(&threadSupervisory, NULL, supervisory, &supervisoryData))
     {
         fprintf(stderr, "Error: supervisory thread return code: %d\n", threadRet);
         exit(EXIT_FAILURE);
@@ -53,9 +63,4 @@ int main(int argc, char* argv[]) {
     pthread_join(threadServer, NULL);
 
     exit(EXIT_SUCCESS);
-}
-
-//TODO
-void *supervisory(void *ptr) {
-    //puts("Supervisory started");
 }

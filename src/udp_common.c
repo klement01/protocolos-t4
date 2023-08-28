@@ -29,6 +29,8 @@ Value strToValue(char* str) {
 }
 
 char* valueToStr(Value value) {
+    if (value < 0) value = 0;
+    else if (value > 100) value = 100;
     snprintf(buffer, 5, "%03d", value);
     return buffer;
 }
