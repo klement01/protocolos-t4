@@ -12,7 +12,7 @@
 
 #define Y_MAX 110
 #define Y_MAX_DRAW 100
-#define X_MAX 60
+#define X_MAX 120
 
 #define BPP 32
 typedef Uint32 PixelType;
