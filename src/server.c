@@ -10,7 +10,7 @@ void *simulation(void *ptr);
 void *supervisory(void *ptr);
 
 int main(int argc, char* argv[]) {
-    ServerData serverData = {0};
+    SharedData serverData = {0};
     SupervisoryData supervisoryData = {0};
     pthread_t threadSimulation, threadSupervisory, threadServer;
     int threadRet;

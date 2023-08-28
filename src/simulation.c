@@ -3,8 +3,10 @@
 
 #include <simulation.h>
 #include <udp_common.h>
-#include <server_shared.h>
+#include <shared.h>
 #include <timer.h>
+
+#define M_PI 3.14159265359
 
 #define PERIOD_MS 10
 #define DATA_CYCLES 100
@@ -45,7 +47,7 @@ Angle getAngleOut(long t) {
 
 void *simulation(void *sdptr) {
     //Gather shared data.
-    ServerData* serverData = (ServerData*)sdptr;
+    SharedData* serverData = (SharedData*)sdptr;
 
     SCMQ* incomingQueue = serverData->incomingQueue;
 
@@ -84,10 +86,10 @@ void *simulation(void *sdptr) {
                 getCurrentTime(&t_start);
                 t = t_start;
 
-                nextAngleIn = 50;
-                nextLevel = 0.4;
+                nextAngleIn = INITIAL_ANGLE_IN;
+                nextLevel = INITIAL_LEVEL;
                 deltaAngle = 0;
-                max = 50;
+                max = INITIAL_MAX;
 
                 *started = 1;
                 puts("Simulation started");

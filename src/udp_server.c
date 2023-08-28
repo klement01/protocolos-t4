@@ -9,8 +9,8 @@
 char incomingBuffer[BUFF_SIZE];
 char outgoingBuffer[BUFF_SIZE];
 
-CML seqHistory = {0};
-SCMQ* incomingQueue = {0};
+CML seqHistory;
+SCMQ* incomingQueue;
 
 pthread_mutex_t* levelLock;
 Level* level;
@@ -152,7 +152,7 @@ void* udp_server(void* sdptr) {
     char* outgoing;
     unsigned int clientlen, serverlen;
     int receivedlen = 0, outgoinglen = 0;
-    ServerData* serverData = (ServerData*)sdptr;
+    SharedData* serverData = (SharedData*)sdptr;
 
     /* Create the UDP socket. */
     if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {

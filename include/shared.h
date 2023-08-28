@@ -1,5 +1,5 @@
-#ifndef SERVER_SHARED_H
-#define SERVER_SHARED_H
+#ifndef SHARED_H
+#define SHARED_H
 
 #include <pthread.h>
 
@@ -7,9 +7,11 @@
 #include <simulation.h>
 
 typedef struct {
+    char* ip;
     char* port;
     
     SCMQ* incomingQueue;
+    SCMQ* outgoingQueue;
 
     int started;
 
@@ -19,6 +21,6 @@ typedef struct {
     pthread_mutex_t angleLock;
     Angle angleIn;
     Angle angleOut;
-} ServerData;
+} SharedData;
 
 #endif

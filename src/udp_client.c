@@ -8,6 +8,15 @@
 #include <udp_common.h>
 #include <udp_client.h>
 
+#define RETRY_MS 50
+
+char incomingBuffer[BUFF_SIZE];
+char outgoingBuffer[BUFF_SIZE];
+
+CML seqHistory;
+SCMQ* incomingQueue;
+SCMQ* outgoingQueue;
+
 void *udp_client(void *cdptr) {
     int sock;
     struct sockaddr_in server;
@@ -15,8 +24,7 @@ void *udp_client(void *cdptr) {
     char buffer[BUFF_SIZE];
     unsigned int echolen, clientlen;
     int received = 0;
-    ClientData* clientData = (ClientData*)cdptr;
-
+    SharedData* clientData = (SharedData*)cdptr;
 
     /* Create the UDP socket */
     if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
@@ -28,6 +36,11 @@ void *udp_client(void *cdptr) {
     server.sin_family = AF_INET;                         /* Internet/IP */
     server.sin_addr.s_addr = inet_addr(clientData->ip);  /* IP address */
     server.sin_port = htons(atoi(clientData->port));     /* server port */
+
+    /* Initialize data structures */
+    incomingQueue = clientData->incomingQueue;
+    outgoingQueue = clientData->outgoingQueue;
+    CMLinit(&seqHistory);
 
     /* Client started. */
     puts("UDP client started");
@@ -57,7 +70,7 @@ void *udp_client(void *cdptr) {
             perror("Received a packet from an unexpected server");
             fprintf(stderr, "Server: %ud\n", server.sin_addr.s_addr);
             fprintf(stderr, "Client: %ud\n", client.sin_addr.s_addr);
-            Die("");
+            exit(EXIT_FAILURE);
         }
         printf("Received: ");
         puts(buffer);
