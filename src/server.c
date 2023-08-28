@@ -6,9 +6,6 @@
 #include <simulation.h>
 #include <supervisory.h>
 
-void *simulation(void *ptr);
-void *supervisory(void *ptr);
-
 int main(int argc, char* argv[]) {
     SharedData serverData = {0};
     SupervisoryData supervisoryData = {0};

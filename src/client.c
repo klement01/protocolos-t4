@@ -3,10 +3,8 @@
 #include <stdlib.h>
 
 #include <udp_client.h>
+#include <controller.h>
 #include <supervisory.h>
-
-void *controller(void *ptr);
-void *supervisory(void *ptr);
 
 int main(int argc, char* argv[]) {
     SharedData clientData = {0};
@@ -14,7 +12,7 @@ int main(int argc, char* argv[]) {
     pthread_t threadController, threadSupervisory, threadClient;
     int threadRet;
 
-    // Checks if an IP and a port have been provided.
+    //Checks if an IP and a port have been provided.
     if (argc != 3) {
         fprintf(stderr, "USAGE: %s <ip> <port>\n", argv[0]);
         exit(EXIT_FAILURE);
@@ -67,9 +65,4 @@ int main(int argc, char* argv[]) {
     pthread_join(threadClient, NULL);
 
     exit(EXIT_SUCCESS);
-}
-
-//TODO
-void *controller(void *ptr) {
-    //puts("Controller started");
 }
