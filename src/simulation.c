@@ -72,7 +72,7 @@ void *simulation(void *sdptr) {
     long cycleCount = 0;
 
     // Runs simulation
-    puts("Simulation initialized, waiting start");
+    puts("[SIMULATION] Waiting start");
     getCurrentTime(&t);
     while (1) {
         //Wait for period of execution.
@@ -92,7 +92,7 @@ void *simulation(void *sdptr) {
                 max = INITIAL_MAX;
 
                 *started = 1;
-                puts("Simulation started");
+                puts("[SIMULATION] Started");
                 continue;
             }
             //Handles other messages.
@@ -136,10 +136,10 @@ void *simulation(void *sdptr) {
         //Occasionally shows simulation data.
         cycleCount++;
         if (cycleCount % DATA_CYCLES == 0) {
-            puts("Simulation data:");
-            printf("---Level:    %.2lf\n", nextLevel*100);
-            printf("---inAngle:  %.2lf\n", nextAngleIn);
-            printf("---outAngle: %.2lf\n", nextAngleOut);
+            puts("[SIMULATION] Data:");
+            printf("[SIMULATION] ---Level:    %.2lf\n", nextLevel*100);
+            printf("[SIMULATION] ---inAngle:  %.2lf\n", nextAngleIn);
+            printf("[SIMULATION] ---outAngle: %.2lf\n", nextAngleOut);
         }
     }
 }

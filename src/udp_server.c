@@ -152,7 +152,7 @@ void* udp_server(void* sdptr) {
 
     /* Create the UDP socket. */
     if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-        Die("Failed to create socket");
+        Die("[FATAL][SERVER] Failed to create socket");
     }
 
     /* Construct the server sockaddr_in structure. */
@@ -164,7 +164,7 @@ void* udp_server(void* sdptr) {
     /* Bind the socket. */
     serverlen = sizeof(server);
     if (bind(sock, (struct sockaddr*) &server, serverlen) < 0) {
-        Die("Failed to bind socket");
+        Die("[FATAL][SERVER] Failed to bind socket");
     }
 
     /* Initialize data structures */
@@ -174,7 +174,7 @@ void* udp_server(void* sdptr) {
     level = &(serverData->level);
 
     /* Server started. */
-    puts("UDP server started");
+    puts("[SERVER] Started");
 
     /* Run until cancelled */
     while (1) {
@@ -184,22 +184,20 @@ void* udp_server(void* sdptr) {
                 (struct sockaddr*) &client,
                 &clientlen);
         if (receivedlen < 0 || receivedlen >= BUFF_SIZE) {
-            perror("Error: failed to receive message");
+            perror("[ERROR][SERVER] Failed to receive message");
         }
         else {
             /* Parse message from the client */
             incomingBuffer[receivedlen] = '\0';
-            printf("Received message: %s\n", incomingBuffer);
 
             outgoing = parseIncomingMessage(incomingBuffer);
             if (!outgoing) outgoing = "Err!";
             outgoinglen = strlen(outgoing);
-            printf("Sending message: %s\n", outgoing);
 
             if (sendto(sock, outgoing, outgoinglen, 0,
                     (struct sockaddr*) &client,
                     sizeof(client)) != outgoinglen) {
-                perror("Error: mismatch in number of sent bytes");
+                perror("[ERROR][SERVER] mismatch in number of sent bytes");
             }
         }
     }

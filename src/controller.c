@@ -7,6 +7,7 @@
 
 #define PERIOD_MS 10
 #define COMM_WAIT_MS 100
+#define DATA_CYCLES 25
 
 #define MAX_OUT 50
 #define K_P 0.5
@@ -53,6 +54,7 @@ void *controller(void *sdptr) {
     int levelChanged;
     struct timespec t;
     long deltaMs;
+    long cycleCount = 0;
 
     //Initializes data
     *level = INITIAL_LEVEL;
@@ -70,21 +72,20 @@ void *controller(void *sdptr) {
     double saturation;
 
     //Checks for communication
-    puts("Controller initialized, checking for communications");
+    puts("[CONTROLLER] Checking communications");
     mes.messageType = COMM_TEST;
     ensureMessageSend(incomingQueue, outgoingQueue, &mes, COMM_OK);
 
     //Starts simulation
-    puts("Communication ok, starting simulation");
+    puts("[CONTROLLER] Starting simulation");
     mes.messageType = START;
     ensureMessageSend(incomingQueue, outgoingQueue, &mes, START_OK);
     sharedData->started = 1;
 
     //Starts control
-    puts("Simulation started, starting control");
+    puts("[CONTROLLER] Simulation started");
 
     //Sets max value
-    puts("Setting max value");
     mes.messageType = SET_MAX;
     mes.value = MAX_OUT;
     do {
@@ -151,6 +152,16 @@ void *controller(void *sdptr) {
         //Waits for next control loop
         while ((deltaMs = getPassedTimeMs(&t)) < PERIOD_MS);
         getCurrentTime(&t);
+
+        //Occasionally shows controller data.
+        cycleCount++;
+        if (cycleCount % DATA_CYCLES == 0) {
+            puts("[CONTROLLER] Data:");
+            printf("[SIMULATION] ---MaxAngleIn:  %d\n", maxAngleIn);
+            printf("[SIMULATION] ---MinAngleIn:  %d\n", maxAngleIn);
+            printf("[SIMULATION] ---AngleTarget: %lf\n", angleTarget);
+            printf("[SIMULATION] ---DeltaValve:  %d\n", deltaValve);
+        }
 
         //Handles incoming messages
         levelChanged = 0;

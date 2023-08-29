@@ -40,17 +40,17 @@ int main(int argc, char* argv[]) {
     //Create all threads.
     if(threadRet = pthread_create(&threadSimulation, NULL, simulation, &serverData))
     {
-        fprintf(stderr, "Error: simulation thread return code: %d\n", threadRet);
+        fprintf(stderr, "[FATAL][MAIN] Simulation thread return code: %d\n", threadRet);
         exit(EXIT_FAILURE);
     }
     if(threadRet = pthread_create(&threadSupervisory, NULL, supervisory, &supervisoryData))
     {
-        fprintf(stderr, "Error: supervisory thread return code: %d\n", threadRet);
+        fprintf(stderr, "[FATAL][MAIN] Supervisory thread return code: %d\n", threadRet);
         exit(EXIT_FAILURE);
     }
     if(threadRet = pthread_create(&threadServer, NULL, udp_server, (void*) &serverData))
     {
-        fprintf(stderr, "Error: server thread return code: %d\n", threadRet);
+        fprintf(stderr, "[FATAL][MAIN] Server thread return code: %d\n", threadRet);
         exit(EXIT_FAILURE);
     }
     

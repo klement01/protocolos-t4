@@ -63,7 +63,9 @@ void parseSeqMessage(char* message, MessageType mtOut, MessageType mtIn) {
     if (err) return;
 
     //Dies if sequence hasn't been sent
-    if (!CMLcheck(&outgoingSeqHistory, mtOut, seq)) Die("Received unexpected sequence");
+    if (!CMLcheck(&outgoingSeqHistory, mtOut, seq)) {
+        Die("[FATAL][CLIENT] Received unexpected sequence");
+    }
 
     //If sequence is received for the first time, remove it from retry
     //queue and add it to incoming queue
@@ -80,7 +82,7 @@ void parseSeqMessage(char* message, MessageType mtOut, MessageType mtIn) {
                 break;
             }
         }
-        if (!mesFound) Die("Couldn't find message in retry queue");
+        if (!mesFound) Die("[FATAL][CLIENT] Couldn't find message in retry queue");
 
         Message mes = {0};
         mes.messageType = mtIn;
@@ -155,16 +157,15 @@ void sendMessage(Message* mes, int sock, struct sockaddr* server) {
             strncpy(outgoingBuffer, "Start!", BUFF_SIZE);
             break;
         default:
-            Die("Invalid message type");
+            Die("[FATAL][CLIENT] Invalid message type");
             break;
     }
 
     //Sends message string
     int echolen = strlen(outgoingBuffer);
-    printf("Sending message: %s\n", outgoingBuffer);
     if (sendto(sock, outgoingBuffer, echolen, 0,
             server, sizeof(struct sockaddr_in)) != echolen) {
-        perror("Mismatch in number of sent bytes");
+        perror("[ERROR][CLIENT] Mismatch in number of sent bytes");
     }
 }
 
@@ -181,7 +182,7 @@ void *udp_client(void *cdptr) {
 
     /* Create the UDP socket */
     if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-        Die("Failed to create socket");
+        Die("[FATAL][CLIENT] Failed to create socket");
     }
 
     /* Construct the server sockaddr_in structure */
@@ -199,8 +200,7 @@ void *udp_client(void *cdptr) {
     sequenceCounter = (rand() % SEQ_MAX) + 1;
 
     /* Client started. */
-    puts("UDP client started");
-    printf("Initial sequence number: %lu\n", sequenceCounter);
+    printf("[CLIENT] Started, initial sequence: %lu\n", sequenceCounter);
 
     /* Send the word to the server */
     while (1) {
@@ -217,14 +217,13 @@ void *udp_client(void *cdptr) {
 
             /* Check that client and server are using same socket */
             if (server.sin_addr.s_addr != client.sin_addr.s_addr) {
-                perror("Received a packet from an unexpected server");
-                fprintf(stderr, "Server: %ud\n", server.sin_addr.s_addr);
-                fprintf(stderr, "Client: %ud\n", client.sin_addr.s_addr);
+                perror("[FATAL][CLIENT] Received a packet from an unexpected server");
+                fprintf(stderr, "[FATAL][CLIENT] Server: %ud\n", server.sin_addr.s_addr);
+                fprintf(stderr, "[FATAL][CLIENT] Client: %ud\n", client.sin_addr.s_addr);
                 exit(EXIT_FAILURE);
             }
 
             /* Parses received message */
-            printf("Received message: %s\n", incomingBuffer);
             parseIncomingMessage(incomingBuffer);
         }
 
@@ -239,7 +238,7 @@ void *udp_client(void *cdptr) {
 
                 //Adds sequence to sent sequence list
                 if (CMLappend(&outgoingSeqHistory, mes->messageType, mes->seq)) {
-                    Die("Unexpected sequence collision when queueing message");
+                    Die("[FATAL][CLIENT] Unexpected sequence collision when queueing message");
                 }
 
                 //Adds to messages awaiting retries
@@ -253,7 +252,7 @@ void *udp_client(void *cdptr) {
                         break;
                     }
                 }
-                if (!spotFound) Die("Unable to queue message for retry");
+                if (!spotFound) Die("[FATAL][CLIENT] Unable to queue message for retry");
             }
             
             //Send message

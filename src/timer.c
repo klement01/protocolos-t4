@@ -7,7 +7,7 @@
 void getCurrentTime(struct timespec* t) {
     if (clock_gettime(CLOCK_MONOTONIC_RAW, t) == -1)
     {
-        Die("Error getting current time.");
+        Die("[FATAL][TIMER] Error getting current time.");
     }
 }
 

@@ -184,13 +184,13 @@ void *supervisory(void *sdptr) {
     datainit(&data, SCREEN_W, SCREEN_H, X_MAX, Y_MAX, 0, 0, 0);
     datadraw(&data, 0, 0, 0, 0);
 
-    puts("Supervisory initialized, waiting simulation start");
+    puts("[SUPERVISORY] Waiting start");
     while (!(*(supervisoryData->started))) quitevent();
 
     getCurrentTime(&tStart);
     t = tStart;
 
-    puts("Supervisory started");
+    puts("[SUPERVISORY] Started");
     while (1) {
         deltaS = ((double)getPassedTimeMs(&tStart)) / 1000;
         if (deltaS > X_MAX) {
