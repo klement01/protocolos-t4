@@ -31,10 +31,6 @@ void addMessageToQueue(MessageType mt, Seq seq, Value value) {
     SCMQqueue(incomingQueue, &mes);
 }
 
-int strStartsWith(char* str, char* find) {
-    return str == strstr(str, find);
-}
-
 char* parseOpenCloseValve(char* message, int open) {
     //OpenValve#⟨seq⟩#⟨value⟩!
     //Open#⟨seq⟩!

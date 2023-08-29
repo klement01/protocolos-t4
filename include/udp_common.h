@@ -13,17 +13,20 @@
 /* Shows error and kills program */
 void Die(char* mess);
 
+/* Checks if str starts with find */
+int strStartsWith(char* str, char* find);
+
 /* Types for messages and fields */
 typedef uint64_t Seq;
 typedef int8_t Value;
 
 typedef enum {
-    OPEN_VALVE,
-    CLOSE_VALVE,
-    GET_LEVEL,
-    COMM_TEST,
-    SET_MAX,
-    START,
+    OPEN_VALVE,  OPEN,
+    CLOSE_VALVE, CLOSE,
+    GET_LEVEL,   LEVEL,
+    COMM_TEST,   COMM_OK,
+    SET_MAX,     MAX,
+    START,       START_OK,
     ERR,
 } MessageType;
 

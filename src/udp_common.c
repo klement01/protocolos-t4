@@ -5,20 +5,23 @@
 
 #include <udp_common.h>
 
-char buffer[BUFF_SIZE];
-
 void Die(char* mess) {
     perror(mess);
     exit(EXIT_FAILURE);
 }
 
+int strStartsWith(char* str, char* find) {
+    return str == strstr(str, find);
+}
+
 /* Conversions between fields and strings */
 Seq strToSeq(char* str) {
-    return atol(str);
+    return strtoul(str, NULL, 10);
 }
 
 char* seqToStr(Seq seq) {
-    snprintf(buffer, 25, "%ld", seq);
+    static char buffer[25];
+    snprintf(buffer, 25, "%lu", seq);
     return buffer;
 }
 
@@ -29,6 +32,7 @@ Value strToValue(char* str) {
 }
 
 char* valueToStr(Value value) {
+    static char buffer[5];
     if (value < 0) value = 0;
     else if (value > 100) value = 100;
     snprintf(buffer, 5, "%03d", value);
@@ -91,7 +95,7 @@ int CMLappend(CML* list, MessageType mt, Seq seq) {
     if (CMLcheck(list, mt, seq)) return 1;
 
     //Only adds valid message types.
-    if (mt == OPEN_VALVE || mt == CLOSE_VALVE) {
+    if (mt == OPEN_VALVE || mt == CLOSE_VALVE || mt == OPEN || mt == CLOSE) {
         list->mtList[list->head] = mt;
         list->seqList[list->head] = seq;
 
