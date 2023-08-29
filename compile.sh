@@ -1,3 +1,4 @@
+mkdir bin -p
 rm bin/server bin/client -f
 cd src
 gcc -I../include server.c udp_server.c udp_common.c simulation.c supervisory.c timer.c -lpthread -lSDL -lm -lrt -std=c99 -o ../bin/server
