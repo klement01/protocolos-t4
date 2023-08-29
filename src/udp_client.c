@@ -202,28 +202,6 @@ void *udp_client(void *cdptr) {
     puts("UDP client started");
     printf("Initial sequence number: %lu\n", sequenceCounter);
 
-    //Adds messages for testing
-    //TODO: remove
-    Message mesTest;
-
-    mesTest.messageType = COMM_TEST;
-    SCMQqueue(outgoingQueue, &mesTest);
-
-    mesTest.messageType = START;
-    SCMQqueue(outgoingQueue, &mesTest);
-
-    mesTest.messageType = GET_LEVEL;
-    SCMQqueue(outgoingQueue, &mesTest);
-
-    mesTest.messageType = SET_MAX; mesTest.value = 20;
-    SCMQqueue(outgoingQueue, &mesTest);
-
-    mesTest.messageType = OPEN_VALVE; mesTest.value = 10;
-    SCMQqueue(outgoingQueue, &mesTest);
-
-    mesTest.messageType = CLOSE_VALVE; mesTest.value = 20;
-    SCMQqueue(outgoingQueue, &mesTest);
-
     /* Send the word to the server */
     while (1) {
         /* Check for incoming message */
