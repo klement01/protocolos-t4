@@ -23,3 +23,10 @@ long getPassedTimeMs(struct timespec* t) {
     getCurrentTime(&t2);
     return getDeltaMs(t, &t2);
 }
+
+void sleepMs(long t) {
+    struct timespec ts;
+    ts.tv_sec = t / 1000;
+    ts.tv_nsec = (t % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+}

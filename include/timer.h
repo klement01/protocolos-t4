@@ -7,5 +7,6 @@
 void getCurrentTime(struct timespec* t);
 long getDeltaMs(struct timespec* t_start, struct timespec* t);
 long getPassedTimeMs(struct timespec* t);
+void sleepMs(long t);
 
 #endif

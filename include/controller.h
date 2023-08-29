@@ -1,6 +1,6 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-void *controller(void *ptr);
+void *controller(void *sdptr);
 
 #endif

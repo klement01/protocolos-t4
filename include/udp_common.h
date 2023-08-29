@@ -21,12 +21,12 @@ typedef uint64_t Seq;
 typedef int8_t Value;
 
 typedef enum {
-    OPEN_VALVE,  OPEN,
-    CLOSE_VALVE, CLOSE,
-    GET_LEVEL,   LEVEL,
-    COMM_TEST,   COMM_OK,
-    SET_MAX,     MAX,
-    START,       START_OK,
+    OPEN_VALVE = 1,  OPEN,
+    CLOSE_VALVE,     CLOSE,
+    GET_LEVEL,       LEVEL,
+    COMM_TEST,       COMM_OK,
+    SET_MAX,         MAX,
+    START,           START_OK,
     ERR,
 } MessageType;
 

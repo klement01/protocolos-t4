@@ -11,7 +11,7 @@
 #include <timer.h>
 
 #define RETRY_MS 50
-#define SEQ_MAX 10000
+#define SEQ_MAX 9999
 
 char incomingBuffer[BUFF_SIZE];
 char outgoingBuffer[BUFF_SIZE];
@@ -196,7 +196,7 @@ void *udp_client(void *cdptr) {
     CMLinit(&incomingSeqHistory);
     CMLinit(&outgoingSeqHistory);
     srand(time(NULL));
-    sequenceCounter = rand() % SEQ_MAX;
+    sequenceCounter = (rand() % SEQ_MAX) + 1;
 
     /* Client started. */
     puts("UDP client started");
@@ -234,7 +234,8 @@ void *udp_client(void *cdptr) {
             if (mes->messageType == OPEN_VALVE || mes->messageType == CLOSE_VALVE) {
                 //Sets sequence number
                 mes->seq = sequenceCounter;
-                sequenceCounter = (sequenceCounter + 1) % SEQ_MAX;
+                sequenceCounter++;
+                if (sequenceCounter > SEQ_MAX) sequenceCounter = 1;
 
                 //Adds sequence to sent sequence list
                 if (CMLappend(&outgoingSeqHistory, mes->messageType, mes->seq)) {
