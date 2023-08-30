@@ -7,13 +7,9 @@
 
 #define PERIOD_MS 10
 #define COMM_WAIT_MS 100
-#define DATA_CYCLES 25
+#define DATA_CYCLES 100
 
-#define MAX_OUT 50
-#define K_P 0.5
-#define K_I 0.1
 #define SP 80
-#define K_AW (2*K_I)
 
 Message* ensureMessageSend(SCMQ* incomingQueue, SCMQ* outgoingQueue,
         Message* mes, MessageType mt) {
@@ -46,30 +42,29 @@ void *controller(void *sdptr) {
 
     pthread_mutex_t* angleLock = &(sharedData->angleLock);
     Angle* angleIn = &(sharedData->angleIn);
-    Angle* angleOut = &(sharedData->angleOut);
+    Angle* max = &(sharedData->angleOut);
 
     //Helper variables
     Message mes = {0};
     Message* mesPtr;
-    int levelChanged;
     struct timespec t;
-    long deltaMs;
+    long deltaMs = 0;
     long cycleCount = 0;
 
     //Initializes data
     *level = INITIAL_LEVEL;
     *angleIn = INITIAL_ANGLE_IN;
-    *angleOut = 0;
+    *max = INITIAL_MAX;
 
     //Control variables
-    Value minAngleIn = INITIAL_ANGLE_IN;
-    Value maxAngleIn = INITIAL_ANGLE_IN;
-    Value levelLast = INITIAL_LEVEL;
-    Value deltaValve;
-    Value error;
-    double angleTarget = INITIAL_ANGLE_IN;
-    double errorIntegral = 0;
-    double saturation;
+    int minAngleIn = INITIAL_ANGLE_IN;
+    int maxAngleIn = INITIAL_ANGLE_IN;
+    int levelLast = INITIAL_LEVEL;
+    int maxLast = INITIAL_MAX;
+    int error = 0;
+    int angleTarget = 0;
+    int deltaValve = 0;
+    int maxTarget = 0;
 
     //Checks for communication
     puts("[CONTROLLER] Checking communications");
@@ -85,86 +80,100 @@ void *controller(void *sdptr) {
     //Starts control
     puts("[CONTROLLER] Simulation started");
 
-    //Sets max value
+    //Sets initial max outflow value
     mes.messageType = SET_MAX;
-    mes.value = MAX_OUT;
+    mes.value = INITIAL_MAX;
     do {
         mesPtr = ensureMessageSend(incomingQueue, outgoingQueue, &mes, MAX);
-    } while (mesPtr->value != MAX_OUT);
+    } while (mesPtr->value != INITIAL_MAX);
 
     getCurrentTime(&t);
-    deltaMs = 0;
     while(1) {
-        //Calculates angle
-        //TODO: PI control
-        /*
         error = SP - levelLast;
-        errorIntegral += error * deltaMs;
-        angleTarget = K_P * error + K_I * errorIntegral / 1000.0;
-        if (angleTarget > 100) {
-            saturation = angleTarget - 100;
-            angleTarget = 100;
-        }
-        else if (angleTarget < 0) {
-            saturation = angleTarget;
-            angleTarget = 0;
-        }
-        else {
-            saturation = 0;
-        }
-        errorIntegral -= K_AW * saturation * deltaMs / 1000.0;
-        */
+
+        //Calculates angle and max outflux
+        //TODO: PI control
 
         //On-off control
-        error = SP - levelLast;
-        if (error > 0) angleTarget = 100;
-        if (error < 0) angleTarget = 0;
+        if (error > 5) {
+            maxTarget = 0;
+        }
+        else if (error < -5) {
+            maxTarget = 100;
+        }
+        else {
+            maxTarget = 80;
+        }
 
-        //Calculates necessary valve delta
-        if (angleTarget > maxAngleIn) deltaValve = angleTarget - maxAngleIn;
-        else if (angleTarget < minAngleIn) deltaValve = angleTarget - minAngleIn;
-        else deltaValve = 0;
+        if (error > 5) {
+            angleTarget = 100;
+        }
+        else if (error > 0) {
+            angleTarget = 80;
+        }
+        else if (error < 0) {
+            angleTarget = 0;
+        }
 
-        //Queues open/close valve message (if needed)
-        if (deltaValve != 0) {
-            if (deltaValve > 0) {
-                mes.messageType = OPEN_VALVE;
-                mes.value = deltaValve;
-                maxAngleIn += deltaValve;
-            }
-            else {
-                mes.messageType = CLOSE_VALVE;
-                mes.value = -deltaValve;
-                minAngleIn -= deltaValve;
-            }
-            SCMQqueue(outgoingQueue, &mes);
+        //Calculates necessary valve variation to achieve target
+        deltaValve = 0;
+        if (angleTarget > maxAngleIn) {
+            deltaValve = angleTarget - maxAngleIn;
+        }
+        else if (angleTarget < minAngleIn) {
+            deltaValve = angleTarget - minAngleIn;
         }
 
         //Queues get level message
         mes.messageType = GET_LEVEL;
         SCMQqueue(outgoingQueue, &mes);
 
-        //Displays best angle estimate
+        //Sends necessary valve variation
+        if (deltaValve != 0) {
+            if (deltaValve > 0) {
+                mes.messageType = OPEN_VALVE;
+                mes.value = deltaValve;
+                maxAngleIn += deltaValve;
+            }
+            else /* deltaValve < 0 */ {
+                mes.messageType = CLOSE_VALVE;
+                mes.value = -deltaValve;
+                minAngleIn += deltaValve;
+            }
+            SCMQqueue(outgoingQueue, &mes);
+        }
+
+        //Sends max outflow target
+        mes.messageType = SET_MAX;
+        mes.value = maxTarget;
+        SCMQqueue(outgoingQueue, &mes);
+
+        //Occasionally shows controller data.
+        cycleCount++;
+        if (cycleCount % DATA_CYCLES == 0) {
+            puts("[CONTROLLER] Data:");
+            printf("[CONTROLLER] ---Error:       %d\n", error);
+            printf("[CONTROLLER] ---MaxAngleIn:  %d\n", maxAngleIn);
+            printf("[CONTROLLER] ---MinAngleIn:  %d\n", minAngleIn);
+            printf("[CONTROLLER] ---AngleTarget: %d\n", angleTarget);
+        }
+
+        //Displays last level
+        pthread_mutex_lock(levelLock);
+        *level = levelLast / 100.0;
+        pthread_mutex_unlock(levelLock);
+
+        //Displays best angle estimate and max outflow
         pthread_mutex_lock(angleLock);
         *angleIn = (minAngleIn + maxAngleIn) / 2;
+        *max = maxLast;
         pthread_mutex_unlock(angleLock);
 
         //Waits for next control loop
         while ((deltaMs = getPassedTimeMs(&t)) < PERIOD_MS);
         getCurrentTime(&t);
 
-        //Occasionally shows controller data.
-        cycleCount++;
-        if (cycleCount % DATA_CYCLES == 0) {
-            puts("[CONTROLLER] Data:");
-            printf("[SIMULATION] ---MaxAngleIn:  %d\n", maxAngleIn);
-            printf("[SIMULATION] ---MinAngleIn:  %d\n", maxAngleIn);
-            printf("[SIMULATION] ---AngleTarget: %lf\n", angleTarget);
-            printf("[SIMULATION] ---DeltaValve:  %d\n", deltaValve);
-        }
-
         //Handles incoming messages
-        levelChanged = 0;
         while ((mesPtr = SCMQdequeue(incomingQueue)) != NULL) {
             switch (mesPtr->messageType) {
                 case OPEN:
@@ -175,18 +184,13 @@ void *controller(void *sdptr) {
                     break;
                 case LEVEL:
                     levelLast = mesPtr->value;
-                    levelChanged = 1;
+                    break;
+                case MAX:
+                    maxLast = mesPtr->value;
                     break;
                 default:
                     break;
             }
-        }
-
-        //Displays last level
-        if (levelChanged) {
-            pthread_mutex_lock(levelLock);
-            *level = levelLast / 100.0;
-            pthread_mutex_unlock(levelLock);
         }
     }
 }
