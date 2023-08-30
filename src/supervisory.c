@@ -214,7 +214,8 @@ void *supervisory(void *sdptr) {
 
         datadraw(&data, deltaS, level, angleIn, angleOut);
 
-        while (getPassedTimeMs(&t) < PERIOD_MS) quitevent();
+        do { quitevent(); } while (getPassedTimeMs(&t) < PERIOD_MS);
         getCurrentTime(&t);
+        
     }
 }
