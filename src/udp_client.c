@@ -263,7 +263,10 @@ void *udp_client(void *cdptr) {
         for (int i = 0; i < QUEUE_LEN; i++) {
             if (retryMessageList[i].active
                     && (getPassedTimeMs(&(retryMessageList[i].lastTry)) > RETRY_MS)) {
-                sendMessage(&(retryMessageList[i].message), sock, (struct sockaddr*) &server);
+                mes = &(retryMessageList[i].message);
+                printf("[CLIENT] Retrying: %s, %s\n",
+                    mtToStr(mes->messageType), seqToStr(mes->seq));
+                sendMessage(mes, sock, (struct sockaddr*) &server);
                 getCurrentTime(&(retryMessageList[i].lastTry));
             }
         }

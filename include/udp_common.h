@@ -37,6 +37,8 @@ typedef struct {
 } Message;
 
 /* Conversion between fields and strings */
+char* mtToStr(MessageType mt);
+
 Seq strToSeq(char* str);
 char* seqToStr(Seq seq);
 

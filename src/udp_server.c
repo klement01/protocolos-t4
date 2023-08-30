@@ -19,7 +19,8 @@ void addMessageToQueue(MessageType mt, Seq seq, Value value) {
     //Checks if sequence value has already been received.
     //If it hasn't, adds it.
     if (CMLappend(&seqHistory, mt, seq)) {
-        printf("Sequence collision: %d, %s\n", mt, seqToStr(seq));
+        printf("[SERVER] Sequence collision: %s, %s\n",
+            mtToStr(mt), seqToStr(seq));
         return;
     }
 

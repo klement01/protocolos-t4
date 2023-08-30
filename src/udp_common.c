@@ -15,6 +15,20 @@ int strStartsWith(char* str, char* find) {
 }
 
 /* Conversions between fields and strings */
+char* mtToStr(MessageType mt) {
+    switch (mt)
+    {
+    case OPEN_VALVE:
+        return "OpenValve";
+        break;
+    case CLOSE_VALVE:
+        return "CloseValve";
+    default:
+        return "OtherMes";
+        break;
+    }
+}
+
 Seq strToSeq(char* str) {
     return strtoul(str, NULL, 10);
 }
