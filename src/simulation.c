@@ -9,7 +9,6 @@
 #define M_PI 3.14159265359
 
 #define PERIOD_MS 10
-#define DATA_CYCLES 100
 
 void processAngleIn(long dt, Angle* delta, Angle* angleIn) {
     Angle maxDelta = 0.01*dt; 
@@ -69,7 +68,6 @@ void *simulation(void *sdptr) {
     Angle deltaAngle;
     double max;
     double nextInflux, nextOutflux;
-    long cycleCount = 0;
 
     // Runs simulation
     puts("[SIMULATION] Waiting start");
@@ -132,14 +130,5 @@ void *simulation(void *sdptr) {
         *angleIn = nextAngleIn;
         *angleOut = nextAngleOut;
         pthread_mutex_unlock(angleLock);
-
-        //Occasionally shows simulation data.
-        cycleCount++;
-        if (cycleCount % DATA_CYCLES == 0) {
-            puts("[SIMULATION] Data:");
-            printf("[SIMULATION] ---Level:    %.2lf\n", nextLevel*100);
-            printf("[SIMULATION] ---inAngle:  %.2lf\n", nextAngleIn);
-            printf("[SIMULATION] ---outAngle: %.2lf\n", nextAngleOut);
-        }
     }
 }

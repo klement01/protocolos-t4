@@ -7,7 +7,6 @@
 
 #define PERIOD_MS 10
 #define COMM_WAIT_MS 100
-#define DATA_CYCLES 100
 
 #define SP 80
 
@@ -48,8 +47,6 @@ void *controller(void *sdptr) {
     Message mes = {0};
     Message* mesPtr;
     struct timespec t;
-    long deltaMs = 0;
-    long cycleCount = 0;
 
     //Initializes data
     *level = INITIAL_LEVEL;
@@ -91,38 +88,20 @@ void *controller(void *sdptr) {
     while(1) {
         error = SP - levelLast;
 
-        //Calculates angle and max outflux
-        //TODO: PI control
+        //Calculates angle and max outflow using
+        //a slightly modified on-off control
+        if (error > 2) maxTarget = 0;
+        else if (error < -2) maxTarget = 100;
+        else /* -2 <= error <= 2 */ maxTarget = 80;
 
-        //On-off control
-        if (error > 5) {
-            maxTarget = 0;
-        }
-        else if (error < -5) {
-            maxTarget = 100;
-        }
-        else {
-            maxTarget = 80;
-        }
-
-        if (error > 5) {
-            angleTarget = 100;
-        }
-        else if (error > 0) {
-            angleTarget = 80;
-        }
-        else if (error < 0) {
-            angleTarget = 0;
-        }
+        if (error > 5) angleTarget = 100;
+        else if (error > 0) angleTarget = 50;
+        else if (error < 0) angleTarget = 0;
 
         //Calculates necessary valve variation to achieve target
         deltaValve = 0;
-        if (angleTarget > maxAngleIn) {
-            deltaValve = angleTarget - maxAngleIn;
-        }
-        else if (angleTarget < minAngleIn) {
-            deltaValve = angleTarget - minAngleIn;
-        }
+        if (angleTarget > maxAngleIn) deltaValve = angleTarget - maxAngleIn;
+        else if (angleTarget < minAngleIn) deltaValve = angleTarget - minAngleIn;
 
         //Queues get level message
         mes.messageType = GET_LEVEL;
@@ -148,16 +127,6 @@ void *controller(void *sdptr) {
         mes.value = maxTarget;
         SCMQqueue(outgoingQueue, &mes);
 
-        //Occasionally shows controller data.
-        cycleCount++;
-        if (cycleCount % DATA_CYCLES == 0) {
-            puts("[CONTROLLER] Data:");
-            printf("[CONTROLLER] ---Error:       %d\n", error);
-            printf("[CONTROLLER] ---MaxAngleIn:  %d\n", maxAngleIn);
-            printf("[CONTROLLER] ---MinAngleIn:  %d\n", minAngleIn);
-            printf("[CONTROLLER] ---AngleTarget: %d\n", angleTarget);
-        }
-
         //Displays last level
         pthread_mutex_lock(levelLock);
         *level = levelLast / 100.0;
@@ -170,7 +139,7 @@ void *controller(void *sdptr) {
         pthread_mutex_unlock(angleLock);
 
         //Waits for next control loop
-        while ((deltaMs = getPassedTimeMs(&t)) < PERIOD_MS);
+        while (getPassedTimeMs(&t) < PERIOD_MS);
         getCurrentTime(&t);
 
         //Handles incoming messages
