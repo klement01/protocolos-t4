@@ -6,7 +6,7 @@
 #include <simulation.h>
 
 #define PERIOD_MS 10
-#define COMM_WAIT_MS 100
+#define COMM_WAIT_MS 250
 
 #define SP 80
 
@@ -41,7 +41,7 @@ void *controller(void *sdptr) {
 
     pthread_mutex_t* angleLock = &(sharedData->angleLock);
     Angle* angleIn = &(sharedData->angleIn);
-    Angle* max = &(sharedData->angleOut);
+    Angle* angleOut = &(sharedData->angleOut);
 
     //Helper variables
     Message mes = {0};
@@ -51,13 +51,13 @@ void *controller(void *sdptr) {
     //Initializes data
     *level = INITIAL_LEVEL;
     *angleIn = INITIAL_ANGLE_IN;
-    *max = INITIAL_MAX;
+    *angleOut = 0;
 
     //Control variables
     int minAngleIn = INITIAL_ANGLE_IN;
     int maxAngleIn = INITIAL_ANGLE_IN;
     int levelLast = INITIAL_LEVEL;
-    int maxLast = INITIAL_MAX;
+    int maxLast = -1;
     int error = 0;
     int angleTarget = 0;
     int deltaValve = 0;
@@ -95,8 +95,8 @@ void *controller(void *sdptr) {
         else /* -2 <= error <= 2 */ maxTarget = 80;
 
         if (error > 5) angleTarget = 100;
-        else if (error > 0) angleTarget = 50;
-        else if (error < 0) angleTarget = 0;
+        else if (error > 0) angleTarget = 60;
+        else /* error <= 0 */ angleTarget = 0;
 
         //Calculates necessary valve variation to achieve target
         deltaValve = 0;
@@ -123,9 +123,11 @@ void *controller(void *sdptr) {
         }
 
         //Sends max outflow target
-        mes.messageType = SET_MAX;
-        mes.value = maxTarget;
-        SCMQqueue(outgoingQueue, &mes);
+        if (maxTarget != maxLast) {
+            mes.messageType = SET_MAX;
+            mes.value = maxTarget;
+            SCMQqueue(outgoingQueue, &mes);
+        }
 
         //Displays last level
         pthread_mutex_lock(levelLock);
@@ -135,7 +137,6 @@ void *controller(void *sdptr) {
         //Displays best angle estimate and max outflow
         pthread_mutex_lock(angleLock);
         *angleIn = (minAngleIn + maxAngleIn) / 2;
-        *max = maxLast;
         pthread_mutex_unlock(angleLock);
 
         //Waits for next control loop
